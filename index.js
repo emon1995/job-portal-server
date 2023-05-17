@@ -24,6 +24,10 @@ async function run() {
   try {
     // DATABASE CREATE
     const jobCollection = client.db("jobPortalDB").collection("jobs");
+    const indexKeys = { title: 1, category: 1 };
+    const indexOptions = { name: "titleCategory" };
+    const result = await jobCollection.createIndex(indexKeys, indexOptions);
+    console.log(result);
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     // Send a ping to confirm a successful connection
@@ -31,6 +35,13 @@ async function run() {
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
+
+    // my job get
+    app.get("/myJob/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await jobCollection.find({ postedBy: email }).toArray();
+      res.send(result);
+    });
 
     // job get
     app.get("/allJobsByCategory/:category", async (req, res) => {
@@ -64,6 +75,20 @@ async function run() {
           status: false,
         });
       }
+    });
+
+    // search job get
+    app.get("/getSearchJob/:text", async (req, res) => {
+      const text = req.params.text;
+      const result = await jobCollection
+        .find({
+          $or: [
+            { title: { $regex: text, $options: "i" } },
+            { category: { $regex: text, $options: "i" } },
+          ],
+        })
+        .toArray();
+      res.send(result);
     });
   } finally {
     // Ensures that the client will close when you finish/error
