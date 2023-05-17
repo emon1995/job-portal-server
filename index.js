@@ -32,6 +32,18 @@ async function run() {
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
 
+    // job get
+    app.get("/allJobsByCategory/:category", async (req, res) => {
+      const category = req.params.category;
+      if (category === "remote" || category === "offline") {
+        const result = await jobCollection.find({ status: category }).toArray();
+        return res.send(result);
+      }
+      const result = await jobCollection.find({}).toArray();
+      res.send(result);
+    });
+
+    // job post
     app.post("/jobPost", async (req, res) => {
       const body = req.body;
       console.log(body);
